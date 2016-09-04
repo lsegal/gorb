@@ -1,0 +1,87 @@
+
+package main
+
+/*
+#include "ruby.h"
+extern VALUE g_alloc_Node(VALUE);
+extern VALUE g_imethod_Node_Value(VALUE);
+extern VALUE g_imethod_Node_Value__set(VALUE, VALUE);
+extern VALUE g_imethod_Node_Next(VALUE);
+extern VALUE g_imethod_Node_Next__set(VALUE, VALUE);
+extern VALUE g_imethod_Node_End(VALUE);
+
+*/
+import "C"
+import "github.com/lsegal/gorb"
+import "github.com/lsegal/gorb/test/node"
+
+var g_class_Node uintptr
+
+
+func g_val2ptr_Node(obj uintptr) *node.Node {
+  return gorb.GoStruct(obj).(*node.Node)
+}
+
+//export g_alloc_Node
+func g_alloc_Node(klass uintptr) uintptr {
+  return g_classinit_Node(klass, &node.Node{})
+}
+
+func g_classinit_Node(klass uintptr, obj *node.Node) uintptr {
+  return gorb.StructValue(klass, obj)
+}
+
+
+//export g_imethod_Node_Value
+func g_imethod_Node_Value(self uintptr) uintptr {
+  obj := g_val2ptr_Node(self)
+  return gorb.StringValue(string(obj.Value))
+}
+
+//export g_imethod_Node_Value__set
+func g_imethod_Node_Value__set(self, val uintptr) uintptr {
+  obj := g_val2ptr_Node(self)
+  obj.Value = node.Data(gorb.GoString(val))
+  return val
+}
+
+
+//export g_imethod_Node_Next
+func g_imethod_Node_Next(self uintptr) uintptr {
+  obj := g_val2ptr_Node(self)
+  return gorb.StructValue(g_class_Node, obj.Next)
+}
+
+//export g_imethod_Node_Next__set
+func g_imethod_Node_Next__set(self, val uintptr) uintptr {
+  obj := g_val2ptr_Node(self)
+  obj.Next = (gorb.GoStruct(val)).(*node.Node)
+  return val
+}
+
+
+//export g_imethod_Node_End
+func g_imethod_Node_End(self uintptr) uintptr {
+  go_obj := g_val2ptr_Node(self)
+  ret := go_obj.End()
+  return gorb.BoolValue(bool(ret))
+}
+
+
+
+//export Init_node
+func Init_node() {
+  g_pkg := gorb.DefineModule(gorb.ModuleRoot, "Test")
+  g_pkg = gorb.DefineModule(g_pkg, "Node")
+
+  g_class_Node = gorb.DefineClass(g_pkg, "Node")
+  gorb.DefineAllocator(g_class_Node, C.g_alloc_Node)
+  gorb.DefineMethod(g_class_Node, "value", C.g_imethod_Node_Value, 0)
+  gorb.DefineMethod(g_class_Node, "value=", C.g_imethod_Node_Value__set, 1)
+  gorb.DefineMethod(g_class_Node, "next", C.g_imethod_Node_Next, 0)
+  gorb.DefineMethod(g_class_Node, "next=", C.g_imethod_Node_Next__set, 1)
+  gorb.DefineMethod(g_class_Node, "end?", C.g_imethod_Node_End, 0)
+
+}
+
+func main() {}
