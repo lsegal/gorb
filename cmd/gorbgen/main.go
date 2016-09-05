@@ -11,7 +11,7 @@ import (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: gorbgen [options] <package>\n\nOptions:\n")
+		fmt.Fprintf(os.Stderr, "Usage: gorbgen [options] <package> [package ...]\n\nOptions:\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 		return
@@ -25,7 +25,9 @@ func main() {
 		flag.Usage()
 	}
 
-	p := path.Clean(flag.Arg(0))
-	gen := codegen.Generator{Path: p, Root: *rootPtr, Build: *boolPtr}
-	gen.Generate()
+	for i := 0; i < flag.NArg(); i++ {
+		p := path.Clean(flag.Arg(i))
+		gen := codegen.Generator{Path: p, Root: *rootPtr, Build: *boolPtr}
+		gen.Generate()
+	}
 }

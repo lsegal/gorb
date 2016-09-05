@@ -42,7 +42,10 @@ func (g *Generator) build() {
 		return
 	}
 
+	dir, _ := os.Getwd()
 	os.Chdir(g.outpath)
+	defer os.Chdir(dir)
+
 	cmd := exec.Command("make")
 	var out bytes.Buffer
 	cmd.Stdout = &out
