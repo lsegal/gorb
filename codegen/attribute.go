@@ -44,15 +44,15 @@ func (a *attribute) ReturnTypeToRuby() string {
 const tplAttrData = `
 //export {{.ReaderFuncName}}
 func {{.ReaderFuncName}}(self uintptr) uintptr {
-  obj := g_val2ptr_{{.ClassName}}(self)
-  return {{.ReturnTypeToRuby}}
+	obj := g_val2ptr_{{.ClassName}}(self)
+	return {{.ReturnTypeToRuby}}
 }
 
 //export {{.WriterFuncName}}
 func {{.WriterFuncName}}(self, val uintptr) uintptr {
-  obj := g_val2ptr_{{.ClassName}}(self)
-  obj.{{.Name}}{{.ReturnTypeToGoExtraArg}} = {{.ReturnTypeToGo}}
-  return val
+	obj := g_val2ptr_{{.ClassName}}(self)
+	obj.{{.Name}}{{.ReturnTypeToGoExtraArg}} = {{.ReturnTypeToGo}}
+	return val
 }
 
 `
@@ -60,9 +60,9 @@ func {{.WriterFuncName}}(self, val uintptr) uintptr {
 var tplAttr = template.Must(template.New("attr").Parse(tplAttrData))
 
 func (a *attribute) write(g *Generator) {
-	fmt.Fprintf(&g.init, `  gorb.DefineMethod(%s, "%s", C.%s, 0)`+"\n",
+	fmt.Fprintf(&g.init, `	gorb.DefineMethod(%s, "%s", C.%s, 0)`+"\n",
 		a.class.VarName(), a.ReaderRubyName(), a.ReaderFuncName())
-	fmt.Fprintf(&g.init, `  gorb.DefineMethod(%s, "%s", C.%s, 1)`+"\n",
+	fmt.Fprintf(&g.init, `	gorb.DefineMethod(%s, "%s", C.%s, 1)`+"\n",
 		a.class.VarName(), a.WriterRubyName(), a.WriterFuncName())
 	g.writePreambleFunc(a.ReaderFuncName(), 0)
 	g.writePreambleFunc(a.WriterFuncName(), 1)

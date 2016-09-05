@@ -11,10 +11,10 @@ static inline double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
 static inline char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
 
 static inline VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, void *ptr) {
-  return Data_Wrap_Struct(klass, mark, free, ptr);
+	return Data_Wrap_Struct(klass, mark, free, ptr);
 }
 inline void* rbmacro_Data_Get_Struct(VALUE obj) {
-  void *ret; Data_Get_Struct(obj, void, ret); return ret;
+	void *ret; Data_Get_Struct(obj, void, ret); return ret;
 }
 
 // extra GC helpers

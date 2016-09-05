@@ -84,7 +84,7 @@ func (g *Generator) rootModule() string {
 			eq = "="
 		}
 
-		fmt.Fprintf(&out, `  g_pkg %s gorb.DefineModule(%s, "%s")`+"\n",
+		fmt.Fprintf(&out, `	g_pkg %s gorb.DefineModule(%s, "%s")`+"\n",
 			eq, varname, capitalize(name))
 		varname = "g_pkg"
 	}

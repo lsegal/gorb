@@ -35,16 +35,16 @@ func (c *class) InitFuncName() string {
 
 const tplClassInitData = `
 func g_val2ptr_{{.Name}}(obj uintptr) *{{.FullStructName}} {
-  return gorb.GoStruct(obj).(*{{.FullStructName}})
+	return gorb.GoStruct(obj).(*{{.FullStructName}})
 }
 
 //export {{.AllocFuncName}}
 func {{.AllocFuncName}}(klass uintptr) uintptr {
-  return {{.InitFuncName}}(klass, &{{.FullStructName}}{})
+	return {{.InitFuncName}}(klass, &{{.FullStructName}}{})
 }
 
 func {{.InitFuncName}}(klass uintptr, obj *{{.FullStructName}}) uintptr {
-  return gorb.StructValue(klass, obj)
+	return gorb.StructValue(klass, obj)
 }
 
 `
@@ -53,8 +53,8 @@ var tplClassInit = template.Must(template.New("classInit").Parse(tplClassInitDat
 
 func (c *class) write(g *Generator) {
 	fmt.Fprintf(&g.gopreamble, "var %s uintptr\n", c.VarName())
-	fmt.Fprintf(&g.init, `  %s = gorb.DefineClass(g_pkg, "%s")`+"\n", c.VarName(), c.Name())
-	fmt.Fprintf(&g.init, `  gorb.DefineAllocator(%s, C.%s)`+"\n", c.VarName(), c.AllocFuncName())
+	fmt.Fprintf(&g.init, `	%s = gorb.DefineClass(g_pkg, "%s")`+"\n", c.VarName(), c.Name())
+	fmt.Fprintf(&g.init, `	gorb.DefineAllocator(%s, C.%s)`+"\n", c.VarName(), c.AllocFuncName())
 	g.writePreambleFunc(c.AllocFuncName(), 0)
 	if err := tplClassInit.Execute(&g.methods, c); err != nil {
 		panic(err)

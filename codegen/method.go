@@ -169,17 +169,17 @@ const tplMethodData = `
 //export {{.FuncName}}
 func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
 {{- if ne .Scope "Class"}}
-  {{.FnReceiver}} := g_val2ptr_{{.ClassName}}(self)
+	{{.FnReceiver}} := g_val2ptr_{{.ClassName}}(self)
 {{- end}}
 {{- range $i, $v := .ArgsList}}
-  go_{{$v}}{{$.ArgToGoExtraArg $i}} := {{$.ArgToGo $i}}
+	go_{{$v}}{{$.ArgToGoExtraArg $i}} := {{$.ArgToGo $i}}
 {{- end}} 
 {{- if .HasReturnType}}
-  ret := {{.FnReceiver}}.{{.Name}}({{.GoArgs}})
-  return {{.ReturnTypeToRuby}}
+	ret := {{.FnReceiver}}.{{.Name}}({{.GoArgs}})
+	return {{.ReturnTypeToRuby}}
 {{- else}}
-  {{.FnReceiver}}.{{.Name}}({{.GoArgs}})
-  return C.Qnil
+	{{.FnReceiver}}.{{.Name}}({{.GoArgs}})
+	return C.Qnil
 {{- end}}
 }
 
@@ -191,10 +191,10 @@ func (m *method) write(g *Generator) {
 	g.writePreambleFunc(m.FuncName(), len(m.args))
 
 	if m.scope == classScope && m.ctor == false { // module function
-		fmt.Fprintf(&g.init, `  gorb.DefineModuleFunction(g_pkg, "%s", C.%s, %d)`+"\n",
+		fmt.Fprintf(&g.init, `	gorb.DefineModuleFunction(g_pkg, "%s", C.%s, %d)`+"\n",
 			m.RubyName(), m.FuncName(), len(m.args))
 	} else {
-		fmt.Fprintf(&g.init, `  gorb.Define%sMethod(%s, "%s", C.%s, %d)`+"\n",
+		fmt.Fprintf(&g.init, `	gorb.Define%sMethod(%s, "%s", C.%s, %d)`+"\n",
 			m.Scope(), m.class.VarName(), m.RubyName(), m.FuncName(), len(m.args))
 	}
 	if err := tplMethod.Execute(&g.methods, m); err != nil {
