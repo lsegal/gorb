@@ -1,16 +1,20 @@
 package codegen
 
 import (
+	"go/ast"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 type gpackage struct {
-	name       string
-	importPath string
-	classes    []*class
-	funcs      []*method
+	name        string
+	importPath  string
+	imports     map[string]string
+	usedImports map[string]bool
+	classes     []*class
+	funcs       []*method
+	ast         *ast.Package
 }
 
 func (g *gpackage) importPackage() string {
@@ -33,6 +37,14 @@ func (g *gpackage) importPackage() string {
 	}
 
 	panic("could not find package " + g.importPath + " in GOPATH")
+}
+
+func (g *gpackage) allImports() string {
+	var out []string
+	for pkg, _ := range g.usedImports {
+		out = append(out, "import \""+pkg+`"`)
+	}
+	return strings.Join(out, "\n")
 }
 
 func (g *gpackage) moduleName() string {

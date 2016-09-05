@@ -35,7 +35,7 @@ func (c *class) InitFuncName() string {
 
 const tplClassInitData = `
 func g_val2ptr_{{.Name}}(obj uintptr) *{{.FullStructName}} {
-	return gorb.GoStruct(obj).(*{{.FullStructName}})
+	return (*{{.FullStructName}})(gorb.GoStruct(obj))
 }
 
 //export {{.AllocFuncName}}
@@ -44,7 +44,7 @@ func {{.AllocFuncName}}(klass uintptr) uintptr {
 }
 
 func {{.InitFuncName}}(klass uintptr, obj *{{.FullStructName}}) uintptr {
-	return gorb.StructValue(klass, obj)
+	return gorb.StructValue(klass, unsafe.Pointer(obj))
 }
 
 `

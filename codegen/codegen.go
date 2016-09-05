@@ -109,8 +109,11 @@ package main
 %s
 */
 import "C"
+import "unsafe"
 import "github.com/lsegal/gorb"
-import "%s"
+%s
+
+var _ unsafe.Pointer // ignore unused import warning
 
 %s
 %s
@@ -123,7 +126,7 @@ func Init_%s() {
 
 func main() {}
 `,
-		g.preamble.String(), g.pkg.importPackage(), g.gopreamble.String(),
+		g.preamble.String(), g.pkg.allImports(), g.gopreamble.String(),
 		g.methods.String(), g.pkg.name, g.pkg.name, g.rootModule(), g.init.String())
 
 }

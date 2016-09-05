@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"go/ast"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
@@ -61,7 +62,20 @@ func (g *Generator) returnTypes(t string) ([]string, error) {
 		return []string{"StructValue", "GoStruct"}, nil
 	}
 
+	if strings.Contains(t, ".") {
+		pkgName := packageName(t)
+		_, ok := g.pkg.imports[pkgName]
+		if ok {
+			return []string{"ExtStructValue", "GoStruct"}, nil
+		}
+	}
+
 	return nil, fmt.Errorf("unknown type %s", t)
+}
+
+func packageName(t string) string {
+	cmps := strings.Split(strings.TrimLeft(t, "*[]"), ".")
+	return cmps[0]
 }
 
 func isExported(s string) bool {
@@ -86,6 +100,19 @@ func (g *Generator) findClass(name string) *class {
 		}
 	}
 	return nil
+}
+
+func (g *Generator) importToModule(name string) string {
+	cmps := strings.Split(strings.TrimLeft(name, "[]*"), ".")
+	path := g.pkg.imports[cmps[0]]
+	r := regexp.MustCompile(g.pkg.importPath + "$")
+	base := r.ReplaceAllString(g.pkg.importPackage(), "")
+	rel, _ := filepath.Rel(base, path)
+	cmps = strings.Split(rel+"/"+cmps[1], "/")
+	for i := range cmps {
+		cmps[i] = capitalize(cmps[i])
+	}
+	return strings.Join(cmps, "::")
 }
 
 func (g *Generator) writePreambleFunc(name string, arity int) {

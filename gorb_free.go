@@ -8,8 +8,5 @@ import "unsafe"
 
 //export gorb_free
 func gorb_free(ptr unsafe.Pointer) {
-	objif := (interface{})(ptr)
-	objptr := gcmap[objif]
-	delete(gcmap, objif)
-	delete(revgcmap, objptr)
+	delete(gcmap, (interface{})(ptr))
 }

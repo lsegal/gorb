@@ -9,7 +9,6 @@ class RubyFib
 end
 
 p is_prime?(5)
-p Fibonacci.new.red.r
 
 require 'benchmark'
 TIMES = 10

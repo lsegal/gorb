@@ -1,3 +1,4 @@
+# requires: GODEBUG=cgocheck=0
 require_relative './node'
 
 include Test::Node

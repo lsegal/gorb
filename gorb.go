@@ -23,8 +23,7 @@ extern void gorb_free(void*);
 import "C"
 import "unsafe"
 
-var gcmap = map[interface{}]*int{}
-var revgcmap = map[*int]interface{}{}
+var gcmap = map[interface{}]bool{}
 
 const ModuleRoot = uintptr(0)
 
@@ -68,22 +67,26 @@ func StringValue(v string) uintptr {
 	return uintptr(C.rb_str_new(str, C.long(len(v))))
 }
 
-func StructValue(val uintptr, obj interface{}) uintptr {
-	// create a new pointer object mapped to obj so we don't pass a complex pointer
-	objptr := 0
-	gcmap[obj] = &objptr
-	revgcmap[&objptr] = obj
-
+func StructValue(val uintptr, obj unsafe.Pointer) uintptr {
+	if obj == nil {
+		return C.Qnil
+	}
+	gcmap[obj] = true
 	return uintptr(C.rbmacro_Data_Wrap_Struct(C.VALUE(val),
-		unsafe.Pointer(nil), unsafe.Pointer(C.gorb_free), unsafe.Pointer(&objptr)))
+		unsafe.Pointer(nil), unsafe.Pointer(C.gorb_free), obj))
 }
 
-func GoStruct(val uintptr) interface{} {
+func GoStruct(val uintptr) unsafe.Pointer {
 	if val == C.Qnil {
 		return nil
 	}
-	objptr := (*int)(C.rbmacro_Data_Get_Struct(C.VALUE(val)))
-	return revgcmap[objptr]
+	return C.rbmacro_Data_Get_Struct(C.VALUE(val))
+}
+
+func ObjAtPath(path string) uintptr {
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	return uintptr(C.rb_path2class(cpath))
 }
 
 // DefineMethod defines an instance method on klass as name. The fn callback

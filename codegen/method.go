@@ -48,6 +48,9 @@ func (m *method) Name() string {
 
 func (m *method) RubyName() string {
 	name := underscore(m.name)
+	if name == "string" {
+		return "to_s"
+	}
 	if m.ResolvedReturnType() == "bool" {
 		name += "?"
 	}
@@ -96,7 +99,7 @@ func (m *method) ArgToGo(n int) string {
 func (m *method) ArgToGoExtraArg(n int) string {
 	t, _ := m.g.returnTypes(m.argTypes[n])
 	if t[1] == "GoStruct" {
-		return ", _"
+		return ""
 	}
 	return ""
 }
@@ -113,9 +116,14 @@ func (m *method) ReturnTypeToRuby() string {
 		if m.indirection == 0 {
 			ret = "&" + ret
 		}
-		return fmt.Sprintf("gorb.StructValue(%s, %s)", v, ret)
+		return fmt.Sprintf("gorb.StructValue(%s, unsafe.Pointer(%s))", v, ret)
 	}
 	t, _ := m.g.returnTypes(m.ResolvedReturnType())
+	if t[0] == "ExtStructValue" {
+		m.g.pkg.usedImports[m.g.pkg.imports[packageName(m.ResolvedReturnType())]] = true
+		return fmt.Sprintf("gorb.StructValue(gorb.ObjAtPath(\"%s\"), unsafe.Pointer(%s))",
+			m.g.importToModule(m.ResolvedReturnType()), ret)
+	}
 	return fmt.Sprintf("gorb.%s(%s))", t[0], ret)
 }
 
@@ -134,7 +142,7 @@ func (m *method) typeToGo(typ string, val string) string {
 	}
 
 	if t[1] == "GoStruct" {
-		out = fmt.Sprintf("(%s).(%s)", out, v)
+		out = fmt.Sprintf("(%s)(%s)", v, out)
 	} else {
 		out = fmt.Sprintf("%s(%s)", v, out)
 	}
@@ -149,7 +157,7 @@ func (m *method) ReturnTypeToGo() string {
 func (m *method) ReturnTypeToGoExtraArg() string {
 	t, _ := m.g.returnTypes(m.returnType)
 	if t[1] == "GoStruct" {
-		return ", _"
+		return ""
 	}
 	return ""
 }

@@ -1,6 +1,6 @@
 # gorb
 
-```
+```sh
 go<->rb
 ```
 
@@ -25,13 +25,27 @@ $ gorbgen -build test/fib
 $ ruby ext/test/fib/test_fib.rb
 ```
 
-# Known Issues / TODO
+## Known Issues
+
+### I get `panic: runtime error: cgo argument has Go pointer to Go pointer` errors
+
+This is caused by changes to pointer checks in Go 1.6+. I am currently trying
+to find a way to work around this (by design, Go object refs must be
+stored in the shared Ruby process space, which Go does not like), but until
+then you can disable the check with the following environment variable:
+
+```sh
+export GODEBUG="cgocheck=0"
+```
+
+## TODO
 
 - [ ] Support for slices, maps, complex pointer types.
-- [ ] Support for external packages.
+- [ ] Support for pass-by-value structs (all structs must be pointers).
+- [x] Support for external packages (partial support for local packages).
 - [ ] Support for error returns (as exceptions?).
 - [ ] Compilation support for other systems (Windows not supported).
 
-# License
+## License
 
 Licensed under the BSD license. Copyright Loren Segal 2016.

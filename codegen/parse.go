@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path"
 	"strings"
 )
 
@@ -20,12 +21,20 @@ func (g *Generator) parse() {
 		}
 
 		ast.PackageExports(pkg)
+		g.pkg.ast = pkg
+		g.pkg.imports = map[string]string{}
 		g.pkg.name = pkg.Name
 		g.pkg.importPath = g.Path
+		g.pkg.usedImports = map[string]bool{}
+		g.pkg.usedImports[g.pkg.importPackage()] = true
 
 		for _, file := range pkg.Files {
 			if strings.HasSuffix(file.Name.String(), "_test") {
 				continue
+			}
+
+			for _, i := range file.Imports {
+				g.addPackage(i)
 			}
 
 			for _, decl := range file.Decls {
@@ -39,6 +48,21 @@ func (g *Generator) parse() {
 		}
 
 		break
+	}
+}
+
+func (g *Generator) addPackage(i *ast.ImportSpec) {
+	ipath := strings.Replace(i.Path.Value, `"`, "", -1)
+
+	var name string
+	if i.Name != nil {
+		name = i.Name.String()
+	} else {
+		name = path.Base(ipath)
+	}
+
+	if strings.HasPrefix(ipath, path.Dir(g.pkg.importPackage())) {
+		g.pkg.imports[name] = ipath
 	}
 }
 

@@ -13,14 +13,17 @@ extern VALUE g_imethod_Node_End(VALUE);
 
 */
 import "C"
+import "unsafe"
 import "github.com/lsegal/gorb"
 import "github.com/lsegal/gorb/test/node"
+
+var _ unsafe.Pointer // ignore unused import warning
 
 var g_class_Node uintptr
 
 
 func g_val2ptr_Node(obj uintptr) *node.Node {
-	return gorb.GoStruct(obj).(*node.Node)
+	return (*node.Node)(gorb.GoStruct(obj))
 }
 
 //export g_alloc_Node
@@ -29,7 +32,7 @@ func g_alloc_Node(klass uintptr) uintptr {
 }
 
 func g_classinit_Node(klass uintptr, obj *node.Node) uintptr {
-	return gorb.StructValue(klass, obj)
+	return gorb.StructValue(klass, unsafe.Pointer(obj))
 }
 
 
@@ -50,13 +53,13 @@ func g_imethod_Node_Value__set(self, val uintptr) uintptr {
 //export g_imethod_Node_Next
 func g_imethod_Node_Next(self uintptr) uintptr {
 	obj := g_val2ptr_Node(self)
-	return gorb.StructValue(g_class_Node, obj.Next)
+	return gorb.StructValue(g_class_Node, unsafe.Pointer(obj.Next))
 }
 
 //export g_imethod_Node_Next__set
 func g_imethod_Node_Next__set(self, val uintptr) uintptr {
 	obj := g_val2ptr_Node(self)
-	obj.Next, _ = (gorb.GoStruct(val)).(*node.Node)
+	obj.Next = (*node.Node)(gorb.GoStruct(val))
 	return val
 }
 
@@ -64,9 +67,9 @@ func g_imethod_Node_Next__set(self, val uintptr) uintptr {
 //export g_cmethod_Node_New
 func g_cmethod_Node_New(self, v, n uintptr) uintptr {
 	go_v := node.Data(gorb.GoString(v))
-	go_n, _ := (gorb.GoStruct(n)).(*node.Node)
+	go_n := (*node.Node)(gorb.GoStruct(n))
 	ret := node.New(go_v, go_n)
-	return gorb.StructValue(g_class_Node, ret)
+	return gorb.StructValue(g_class_Node, unsafe.Pointer(ret))
 }
 
 
