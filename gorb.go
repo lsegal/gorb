@@ -79,6 +79,9 @@ func StructValue(val uintptr, obj interface{}) uintptr {
 }
 
 func GoStruct(val uintptr) interface{} {
+	if val == C.Qnil {
+		return nil
+	}
 	objptr := (*int)(C.rbmacro_Data_Get_Struct(C.VALUE(val)))
 	return revgcmap[objptr]
 }

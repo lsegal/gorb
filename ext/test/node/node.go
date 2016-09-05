@@ -8,6 +8,7 @@ extern VALUE g_imethod_Node_Value(VALUE);
 extern VALUE g_imethod_Node_Value__set(VALUE, VALUE);
 extern VALUE g_imethod_Node_Next(VALUE);
 extern VALUE g_imethod_Node_Next__set(VALUE, VALUE);
+extern VALUE g_cmethod_Node_New(VALUE, VALUE, VALUE);
 extern VALUE g_imethod_Node_End(VALUE);
 
 */
@@ -55,8 +56,17 @@ func g_imethod_Node_Next(self uintptr) uintptr {
 //export g_imethod_Node_Next__set
 func g_imethod_Node_Next__set(self, val uintptr) uintptr {
   obj := g_val2ptr_Node(self)
-  obj.Next = (gorb.GoStruct(val)).(*node.Node)
+  obj.Next, _ = (gorb.GoStruct(val)).(*node.Node)
   return val
+}
+
+
+//export g_cmethod_Node_New
+func g_cmethod_Node_New(self, v, n uintptr) uintptr {
+  go_v := node.Data(gorb.GoString(v))
+  go_n, _ := (gorb.GoStruct(n)).(*node.Node)
+  ret := node.New(go_v, go_n)
+  return gorb.StructValue(g_class_Node, ret)
 }
 
 
@@ -80,6 +90,7 @@ func Init_node() {
   gorb.DefineMethod(g_class_Node, "value=", C.g_imethod_Node_Value__set, 1)
   gorb.DefineMethod(g_class_Node, "next", C.g_imethod_Node_Next, 0)
   gorb.DefineMethod(g_class_Node, "next=", C.g_imethod_Node_Next__set, 1)
+  gorb.DefineClassMethod(g_class_Node, "new", C.g_cmethod_Node_New, 2)
   gorb.DefineMethod(g_class_Node, "end?", C.g_imethod_Node_End, 0)
 
 }

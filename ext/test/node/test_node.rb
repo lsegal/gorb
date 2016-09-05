@@ -1,7 +1,14 @@
 require_relative './node'
 
-n = Test::Node::Node.new
-n.next = Test::Node::Node.new
-n.next.next = Test::Node::Node.new
-n.next.next.value = "hello"
-p n.next.next.value
+include Test::Node
+
+root = Node.new('a', Node.new('b', Node.new('c', nil)))
+
+n = root
+loop do
+  print "#{n.value} -> "
+  break if n.end?
+  n = n.next
+end
+
+puts 'END'

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go/token"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,10 +47,7 @@ func (g *Generator) build() {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cmd.Run()
 	fmt.Print(out.String())
 }
 

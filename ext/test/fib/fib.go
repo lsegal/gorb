@@ -29,7 +29,7 @@ var g_class_Fibonacci uintptr
 
 //export g_cmethod__IsPrime
 func g_cmethod__IsPrime(self, n uintptr) uintptr {
-  go_n := gorb.GoInt(n)
+  go_n := int(gorb.GoInt(n))
   ret := fib.IsPrime(go_n)
   return gorb.BoolValue(bool(ret))
 }
@@ -107,9 +107,9 @@ func g_imethod_Color_HSV__set(self, val uintptr) uintptr {
 
 //export g_cmethod_Color_New
 func g_cmethod_Color_New(self, r, g, b uintptr) uintptr {
-  go_r := gorb.GoInt(r)
-  go_g := gorb.GoInt(g)
-  go_b := gorb.GoInt(b)
+  go_r := int(gorb.GoInt(r))
+  go_g := int(gorb.GoInt(g))
+  go_b := int(gorb.GoInt(b))
   ret := fib.New(go_r, go_g, go_b)
   return gorb.StructValue(g_class_Color, ret)
 }
@@ -132,7 +132,7 @@ func g_classinit_Fibonacci(klass uintptr, obj *fib.Fibonacci) uintptr {
 //export g_imethod_Fibonacci_Fib
 func g_imethod_Fibonacci_Fib(self, n uintptr) uintptr {
   go_obj := g_val2ptr_Fibonacci(self)
-  go_n := gorb.GoInt(n)
+  go_n := int(gorb.GoInt(n))
   ret := go_obj.Fib(go_n)
   return gorb.IntValue(int(ret))
 }

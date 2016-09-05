@@ -90,8 +90,15 @@ func (m *method) ArgsList() []string {
 }
 
 func (m *method) ArgToGo(n int) string {
+	return m.typeToGo(m.argTypes[n], m.args[n])
+}
+
+func (m *method) ArgToGoExtraArg(n int) string {
 	t, _ := m.g.returnTypes(m.argTypes[n])
-	return t[1]
+	if t[1] == "GoStruct" {
+		return ", _"
+	}
+	return ""
 }
 
 func (m *method) ReturnTypeToRuby() string {
@@ -112,6 +119,41 @@ func (m *method) ReturnTypeToRuby() string {
 	return fmt.Sprintf("gorb.%s(%s))", t[0], ret)
 }
 
+func (m *method) typeToGo(typ string, val string) string {
+	t, _ := m.g.returnTypes(typ)
+	out := "gorb." + t[1] + "(" + val + ")"
+	v := typ
+	if isExported(v) {
+		for v != "" {
+			if m.g.revTypeAliasMap[v] == "" {
+				break
+			}
+			v = m.g.revTypeAliasMap[v]
+		}
+		v = insertPkg(v, m.g.pkg.name)
+	}
+
+	if t[1] == "GoStruct" {
+		out = fmt.Sprintf("(%s).(%s)", out, v)
+	} else {
+		out = fmt.Sprintf("%s(%s)", v, out)
+	}
+	out = strings.Join(make([]string, m.indirection), "&") + out
+	return out
+}
+
+func (m *method) ReturnTypeToGo() string {
+	return m.typeToGo(m.returnType, "val")
+}
+
+func (m *method) ReturnTypeToGoExtraArg() string {
+	t, _ := m.g.returnTypes(m.returnType)
+	if t[1] == "GoStruct" {
+		return ", _"
+	}
+	return ""
+}
+
 func (m *method) HasReturnType() bool {
 	return m.returnType != ""
 }
@@ -130,7 +172,7 @@ func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
   {{.FnReceiver}} := g_val2ptr_{{.ClassName}}(self)
 {{- end}}
 {{- range $i, $v := .ArgsList}}
-  go_{{$v}} := gorb.{{$.ArgToGo $i}}({{$v}})
+  go_{{$v}}{{$.ArgToGoExtraArg $i}} := {{$.ArgToGo $i}}
 {{- end}} 
 {{- if .HasReturnType}}
   ret := {{.FnReceiver}}.{{.Name}}({{.GoArgs}})
