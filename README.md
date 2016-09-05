@@ -25,6 +25,16 @@ $ gorbgen -build test/fib
 $ ruby ext/test/fib/test_fib.rb
 ```
 
+## Run Tests
+
+To run acceptance tests:
+
+```sh
+$ ./test/test.sh
+```
+
+Tests pass if exit code is 0.
+
 ## Known Issues
 
 ### I get `panic: runtime error: cgo argument has Go pointer to Go pointer` errors
