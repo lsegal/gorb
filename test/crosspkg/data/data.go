@@ -10,6 +10,11 @@ type HSV struct {
 	H, S, V float64
 }
 
+type Color struct {
+	HSV HSV
+	RGB RGB
+}
+
 func (h *HSV) String() string {
 	return fmt.Sprintf("HSV(h=%f, s=%f, v=%f)", h.H, h.S, h.V)
 }

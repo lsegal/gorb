@@ -83,7 +83,11 @@ func (m *method) RubyArgs() string {
 func (m *method) GoArgs() string {
 	outargs := make([]string, len(m.args))
 	for i, a := range m.args {
-		outargs[i] = "go_" + a
+		prefix := ""
+		if m.g.isValueType(m.argTypes[i]) {
+			prefix = "*"
+		}
+		outargs[i] = prefix + "go_" + a
 	}
 	return strings.Join(outargs, ", ")
 }
@@ -94,14 +98,6 @@ func (m *method) ArgsList() []string {
 
 func (m *method) ArgToGo(n int) string {
 	return m.typeToGo(m.argTypes[n], m.args[n])
-}
-
-func (m *method) ArgToGoExtraArg(n int) string {
-	t, _ := m.g.returnTypes(m.argTypes[n])
-	if t[1] == "GoStruct" {
-		return ""
-	}
-	return ""
 }
 
 func (m *method) ReturnTypeToRuby() string {
@@ -118,12 +114,18 @@ func (m *method) ReturnTypeToRuby() string {
 		}
 		return fmt.Sprintf("gorb.StructValue(%s, unsafe.Pointer(%s))", v, ret)
 	}
-	t, _ := m.g.returnTypes(m.ResolvedReturnType())
-	if t[0] == "ExtStructValue" {
-		m.g.pkg.usedImports[m.g.pkg.imports[packageName(m.ResolvedReturnType())]] = true
+
+	if r := m.ResolvedReturnType(); isExternal(r) {
+		if m.indirection == 0 {
+			ret = "&" + ret
+		}
+
+		m.g.pkg.usedImports[m.g.pkg.imports[packageName(r)]] = true
 		return fmt.Sprintf("gorb.StructValue(gorb.ObjAtPath(\"%s\"), unsafe.Pointer(%s))",
-			m.g.importToModule(m.ResolvedReturnType()), ret)
+			m.g.importToModule(r), ret)
 	}
+
+	t, _ := m.g.returnTypes(m.ResolvedReturnType())
 	return fmt.Sprintf("gorb.%s(%s))", t[0], ret)
 }
 
@@ -142,6 +144,9 @@ func (m *method) typeToGo(typ string, val string) string {
 	}
 
 	if t[1] == "GoStruct" {
+		if indirection(v) == 0 {
+			v = "*" + v
+		}
 		out = fmt.Sprintf("(%s)(%s)", v, out)
 	} else {
 		out = fmt.Sprintf("%s(%s)", v, out)
@@ -152,14 +157,6 @@ func (m *method) typeToGo(typ string, val string) string {
 
 func (m *method) ReturnTypeToGo() string {
 	return m.typeToGo(m.returnType, "val")
-}
-
-func (m *method) ReturnTypeToGoExtraArg() string {
-	t, _ := m.g.returnTypes(m.returnType)
-	if t[1] == "GoStruct" {
-		return ""
-	}
-	return ""
 }
 
 func (m *method) HasReturnType() bool {
@@ -180,7 +177,7 @@ func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
 	{{.FnReceiver}} := g_val2ptr_{{.ClassName}}(self)
 {{- end}}
 {{- range $i, $v := .ArgsList}}
-	go_{{$v}}{{$.ArgToGoExtraArg $i}} := {{$.ArgToGo $i}}
+	go_{{$v}} := {{$.ArgToGo $i}}
 {{- end}} 
 {{- if .HasReturnType}}
 	ret := {{.FnReceiver}}.{{.Name}}({{.GoArgs}})

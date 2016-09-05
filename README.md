@@ -41,7 +41,7 @@ export GODEBUG="cgocheck=0"
 ## TODO
 
 - [ ] Support for slices, maps, complex pointer types.
-- [ ] Support for pass-by-value structs (all structs must be pointers).
+- [x] Support for pass-by-value structs (partial value type support).
 - [x] Support for external packages (partial support for local packages).
 - [ ] Support for error returns (as exceptions?).
 - [ ] Compilation support for other systems (Windows not supported).

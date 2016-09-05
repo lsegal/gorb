@@ -41,6 +41,13 @@ func (a *attribute) ReturnTypeToRuby() string {
 	return reRetReplace.ReplaceAllString(str, "obj."+a.Name())
 }
 
+func (a *attribute) Indirect() string {
+	if a.g.isValueType(a.returnType) {
+		return "*"
+	}
+	return ""
+}
+
 const tplAttrData = `
 //export {{.ReaderFuncName}}
 func {{.ReaderFuncName}}(self uintptr) uintptr {
@@ -51,7 +58,7 @@ func {{.ReaderFuncName}}(self uintptr) uintptr {
 //export {{.WriterFuncName}}
 func {{.WriterFuncName}}(self, val uintptr) uintptr {
 	obj := g_val2ptr_{{.ClassName}}(self)
-	obj.{{.Name}}{{.ReturnTypeToGoExtraArg}} = {{.ReturnTypeToGo}}
+	obj.{{.Name}} = {{.Indirect}}{{.ReturnTypeToGo}}
 	return val
 }
 

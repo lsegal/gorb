@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/lsegal/gorb/codegen"
 )
@@ -24,6 +25,7 @@ func main() {
 		flag.Usage()
 	}
 
-	gen := codegen.Generator{Path: flag.Arg(0), Root: *rootPtr, Build: *boolPtr}
+	p := path.Clean(flag.Arg(0))
+	gen := codegen.Generator{Path: p, Root: *rootPtr, Build: *boolPtr}
 	gen.Generate()
 }

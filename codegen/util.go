@@ -39,6 +39,9 @@ func underscore(s string) string {
 }
 
 func capitalize(s string) string {
+	if len(s) <= 1 {
+		return strings.ToUpper(s)
+	}
 	return strings.ToUpper(s[0:1]) + s[1:]
 }
 
@@ -78,12 +81,32 @@ func packageName(t string) string {
 	return cmps[0]
 }
 
+func isExternal(s string) bool {
+	return strings.Contains(s, ".")
+}
+
 func isExported(s string) bool {
 	s = strings.TrimLeft(s, "*[]")
 	if s == "" {
 		return false
 	}
 	return unicode.IsUpper(rune(s[0]))
+}
+
+func isBuiltin(s string) bool {
+	if isExternal(s) {
+		return false
+	} else if isExported(s) {
+		return false
+	}
+	return true
+}
+
+func (g *Generator) isValueType(s string) bool {
+	if g.typeAliasMap[s] != "" {
+		return false
+	}
+	return !isBuiltin(s) && indirection(s) == 0
 }
 
 var rePkgReplace = regexp.MustCompile(`^([\*\[\]]*)(\S+)`)
@@ -105,7 +128,7 @@ func (g *Generator) findClass(name string) *class {
 func (g *Generator) importToModule(name string) string {
 	cmps := strings.Split(strings.TrimLeft(name, "[]*"), ".")
 	path := g.pkg.imports[cmps[0]]
-	r := regexp.MustCompile(g.pkg.importPath + "$")
+	r := regexp.MustCompile(regexp.QuoteMeta(g.pkg.importPath) + "$")
 	base := r.ReplaceAllString(g.pkg.importPackage(), "")
 	rel, _ := filepath.Rel(base, path)
 	cmps = strings.Split(rel+"/"+cmps[1], "/")
@@ -121,4 +144,8 @@ func (g *Generator) writePreambleFunc(name string, arity int) {
 		args[i] = "VALUE"
 	}
 	fmt.Fprintf(&g.preamble, "extern VALUE %s(%s);\n", name, strings.Join(args, ", "))
+}
+
+func indirection(s string) int {
+	return strings.Count(s, "*")
 }

@@ -19,6 +19,11 @@ extern VALUE g_imethod_HSV_V(VALUE);
 extern VALUE g_imethod_HSV_V__set(VALUE, VALUE);
 extern VALUE g_imethod_HSV_String(VALUE);
 extern VALUE g_imethod_HSV_Inspect(VALUE);
+extern VALUE g_alloc_Color(VALUE);
+extern VALUE g_imethod_Color_HSV(VALUE);
+extern VALUE g_imethod_Color_HSV__set(VALUE, VALUE);
+extern VALUE g_imethod_Color_RGB(VALUE);
+extern VALUE g_imethod_Color_RGB__set(VALUE, VALUE);
 
 */
 import "C"
@@ -30,6 +35,7 @@ var _ unsafe.Pointer // ignore unused import warning
 
 var g_class_RGB uintptr
 var g_class_HSV uintptr
+var g_class_Color uintptr
 
 
 func g_val2ptr_RGB(obj uintptr) *data.RGB {
@@ -160,6 +166,48 @@ func g_imethod_HSV_Inspect(self uintptr) uintptr {
 }
 
 
+func g_val2ptr_Color(obj uintptr) *data.Color {
+	return (*data.Color)(gorb.GoStruct(obj))
+}
+
+//export g_alloc_Color
+func g_alloc_Color(klass uintptr) uintptr {
+	return g_classinit_Color(klass, &data.Color{})
+}
+
+func g_classinit_Color(klass uintptr, obj *data.Color) uintptr {
+	return gorb.StructValue(klass, unsafe.Pointer(obj))
+}
+
+
+//export g_imethod_Color_HSV
+func g_imethod_Color_HSV(self uintptr) uintptr {
+	obj := g_val2ptr_Color(self)
+	return gorb.StructValue(g_class_HSV, unsafe.Pointer(&obj.HSV))
+}
+
+//export g_imethod_Color_HSV__set
+func g_imethod_Color_HSV__set(self, val uintptr) uintptr {
+	obj := g_val2ptr_Color(self)
+	obj.HSV = *(*data.HSV)(gorb.GoStruct(val))
+	return val
+}
+
+
+//export g_imethod_Color_RGB
+func g_imethod_Color_RGB(self uintptr) uintptr {
+	obj := g_val2ptr_Color(self)
+	return gorb.StructValue(g_class_RGB, unsafe.Pointer(&obj.RGB))
+}
+
+//export g_imethod_Color_RGB__set
+func g_imethod_Color_RGB__set(self, val uintptr) uintptr {
+	obj := g_val2ptr_Color(self)
+	obj.RGB = *(*data.RGB)(gorb.GoStruct(val))
+	return val
+}
+
+
 
 //export Init_data
 func Init_data() {
@@ -185,6 +233,12 @@ func Init_data() {
 	gorb.DefineMethod(g_class_HSV, "v=", C.g_imethod_HSV_V__set, 1)
 	gorb.DefineMethod(g_class_HSV, "to_s", C.g_imethod_HSV_String, 0)
 	gorb.DefineMethod(g_class_HSV, "inspect", C.g_imethod_HSV_Inspect, 0)
+	g_class_Color = gorb.DefineClass(g_pkg, "Color")
+	gorb.DefineAllocator(g_class_Color, C.g_alloc_Color)
+	gorb.DefineMethod(g_class_Color, "hsv", C.g_imethod_Color_HSV, 0)
+	gorb.DefineMethod(g_class_Color, "hsv=", C.g_imethod_Color_HSV__set, 1)
+	gorb.DefineMethod(g_class_Color, "rgb", C.g_imethod_Color_RGB, 0)
+	gorb.DefineMethod(g_class_Color, "rgb=", C.g_imethod_Color_RGB__set, 1)
 
 }
 
