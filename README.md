@@ -29,6 +29,7 @@ $ ruby ext/test/fib/test_fib.rb
 
 - [ ] Support for slices, maps, complex pointer types.
 - [ ] Support for external packages.
+- [ ] Support for error returns (as exceptions?).
 - [ ] Compilation support for other systems (Windows not supported).
 
 # License
