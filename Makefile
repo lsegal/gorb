@@ -5,3 +5,8 @@ export CGO_LDFLAGS
 
 all:
 	go build .
+
+test:
+	bash test/test.sh
+
+.PHONY: all test clean
