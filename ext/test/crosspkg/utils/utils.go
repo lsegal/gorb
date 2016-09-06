@@ -9,8 +9,8 @@ extern VALUE g_cmethod__ToHSV(VALUE, VALUE);
 import "C"
 import "unsafe"
 import "github.com/lsegal/gorb"
-import "github.com/lsegal/gorb/test/crosspkg/utils"
 import "github.com/lsegal/gorb/test/crosspkg/data"
+import "github.com/lsegal/gorb/test/crosspkg/utils"
 
 var _ unsafe.Pointer // ignore unused import warning
 
