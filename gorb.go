@@ -10,8 +10,8 @@ static inline VALUE rbmacro_INT2NUM(int n) { return INT2NUM(n); }
 static inline double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
 static inline char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
 
-static inline VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, void *ptr) {
-	return Data_Wrap_Struct(klass, mark, free, ptr);
+static inline VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, char *ptr) {
+	return Data_Wrap_Struct(klass, mark, free, (void*)ptr);
 }
 inline void* rbmacro_Data_Get_Struct(VALUE obj) {
 	void *ret; Data_Get_Struct(obj, void, ret); return ret;
@@ -73,7 +73,7 @@ func StructValue(val uintptr, obj unsafe.Pointer) uintptr {
 	}
 	gcmap[obj] = true
 	return uintptr(C.rbmacro_Data_Wrap_Struct(C.VALUE(val),
-		unsafe.Pointer(nil), unsafe.Pointer(C.gorb_free), obj))
+		unsafe.Pointer(nil), unsafe.Pointer(C.gorb_free), (*C.char)(obj)))
 }
 
 func GoStruct(val uintptr) unsafe.Pointer {

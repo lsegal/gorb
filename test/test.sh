@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export GODEBUG="cgocheck=0"
-
 BCMD="go run cmd/gorbgen/main.go -build"
 TCMD="ruby"
 

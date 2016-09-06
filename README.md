@@ -35,19 +35,6 @@ $ ./test/test.sh
 
 Tests pass if exit code is 0.
 
-## Known Issues
-
-### I get `panic: runtime error: cgo argument has Go pointer to Go pointer` errors
-
-This is caused by changes to pointer checks in Go 1.6+. I am currently trying
-to find a way to work around this (by design, Go object refs must be
-stored in the shared Ruby process space, which Go does not like), but until
-then you can disable the check with the following environment variable:
-
-```sh
-export GODEBUG="cgocheck=0"
-```
-
 ## TODO
 
 - [ ] Support for slices, maps, complex pointer types.
