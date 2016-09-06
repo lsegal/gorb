@@ -94,17 +94,16 @@ func (g *Generator) parseField(field *ast.Field, class *class) {
 		if name.IsExported() {
 			typ := resolveType(field.Type)
 			m := &method{
-				g:          g,
-				class:      class,
-				name:       name.String(),
-				returnType: typ,
+				g:           g,
+				class:       class,
+				name:        name.String(),
+				returnTypes: []string{typ},
 			}
 
 			if isExported(typ) {
 				m.returnClass = typ
 			}
 			m.indirection = strings.Count(typ, "*")
-			m.returnType = typ
 			class.attrs = append(class.attrs, &attribute{m})
 		}
 	}
@@ -128,7 +127,7 @@ func (g *Generator) parseFunc(f *ast.FuncDecl) {
 
 	if f.Type.Results.NumFields() == 1 {
 		typ := resolveType(f.Type.Results.List[0].Type)
-		m.returnType = typ
+		appendReturnTypes(&m, f.Type)
 		if isExported(typ) {
 			m.returnClass = typ
 		}
@@ -165,4 +164,10 @@ func (g *Generator) parseFunc(f *ast.FuncDecl) {
 
 	m.scope = classScope
 	g.pkg.funcs = append(g.pkg.funcs, &m)
+}
+
+func appendReturnTypes(m *method, t *ast.FuncType) {
+	for _, rf := range t.Results.List {
+		m.returnTypes = append(m.returnTypes, resolveType(rf.Type))
+	}
 }

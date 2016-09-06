@@ -42,7 +42,7 @@ func (a *attribute) ReturnTypeToRuby() string {
 }
 
 func (a *attribute) Indirect() string {
-	if a.g.isValueType(a.returnType) {
+	if a.g.isValueType(a.returnTypes[0]) {
 		return "*"
 	}
 	return ""

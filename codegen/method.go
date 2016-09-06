@@ -23,11 +23,11 @@ type method struct {
 	scope       scope
 	args        []string
 	argTypes    []string
-	returnType  string
+	returnTypes []string
 }
 
 func (m *method) ResolvedReturnType() string {
-	return m.g.resolvedType(m.returnType)
+	return m.g.resolvedType(m.returnTypes[0])
 }
 
 func (m *method) ResolvedReturnClass() string {
@@ -156,11 +156,11 @@ func (m *method) typeToGo(typ string, val string) string {
 }
 
 func (m *method) ReturnTypeToGo() string {
-	return m.typeToGo(m.returnType, "val")
+	return m.typeToGo(m.returnTypes[0], "val")
 }
 
 func (m *method) HasReturnType() bool {
-	return m.returnType != ""
+	return len(m.returnTypes) > 0
 }
 
 func (m *method) FnReceiver() string {
