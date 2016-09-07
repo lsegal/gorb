@@ -5,15 +5,15 @@ package gorb
 #include "ruby.h"
 
 // Ruby macro wrappers
-static inline int rbmacro_NUM2INT(VALUE fix) { return NUM2INT(fix); }
-static inline VALUE rbmacro_INT2NUM(int n) { return INT2NUM(n); }
-static inline double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
-static inline char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
+int rbmacro_NUM2INT(VALUE fix) { return NUM2INT(fix); }
+VALUE rbmacro_INT2NUM(int n) { return INT2NUM(n); }
+double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
+char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
 
-static inline VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, char *ptr) {
+VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, char *ptr) {
 	return Data_Wrap_Struct(klass, mark, free, (void*)ptr);
 }
-inline void* rbmacro_Data_Get_Struct(VALUE obj) {
+void* rbmacro_Data_Get_Struct(VALUE obj) {
 	void *ret; Data_Get_Struct(obj, void, ret); return ret;
 }
 
