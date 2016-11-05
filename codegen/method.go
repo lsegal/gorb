@@ -100,6 +100,20 @@ func (m *method) ArgToGo(n int) string {
 	return m.typeToGo(m.argTypes[n], m.args[n])
 }
 
+func (m *method) ReceiverVars() string {
+	if m.returnTypes[len(m.returnTypes)-1] == "error" {
+		return "ret, err"
+	}
+	return "ret"
+}
+
+func (m *method) RaiseError() string {
+	if m.ReceiverVars() != "ret" {
+		return "\n  gorb.RaiseError(err)"
+	}
+	return ""
+}
+
 func (m *method) ReturnTypeToRuby() string {
 	ret := "ret"
 	if r := m.ResolvedReturnClass(); r != "" && isExported(r) {
@@ -180,7 +194,7 @@ func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
 	go_{{$v}} := {{$.ArgToGo $i}}
 {{- end}} 
 {{- if .HasReturnType}}
-	ret := {{.FnReceiver}}.{{.Name}}({{.GoArgs}})
+	{{.ReceiverVars}} := {{.FnReceiver}}.{{.Name}}({{.GoArgs}}){{.RaiseError}}
 	return {{.ReturnTypeToRuby}}
 {{- else}}
 	{{.FnReceiver}}.{{.Name}}({{.GoArgs}})

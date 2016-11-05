@@ -89,6 +89,15 @@ func ObjAtPath(path string) uintptr {
 	return uintptr(C.rb_path2class(cpath))
 }
 
+func RaiseError(err error) {
+	if err == nil {
+		return
+	}
+
+	strErr := C.VALUE(StringValue(err.Error()))
+	C.rb_exc_raise(C.rb_exc_new3(C.rb_eRuntimeError, strErr))
+}
+
 // DefineMethod defines an instance method on klass as name. The fn callback
 // should be an exported C function, and arity should denote the number of
 // arguments (minus the self value).

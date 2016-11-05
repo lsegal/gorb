@@ -111,12 +111,6 @@ func (g *Generator) parseField(field *ast.Field, class *class) {
 }
 
 func (g *Generator) parseFunc(f *ast.FuncDecl) {
-	if f.Type.Results.NumFields() > 1 {
-		fmt.Fprintf(&g.gopreamble, "// skipped func %s() (%s) (unsupported error return)\n",
-			f.Name.Name, g.fset.Position(f.Name.Pos()))
-		return // TODO support error return
-	}
-
 	m := method{g: g, name: f.Name.Name}
 	for _, v := range f.Type.Params.List {
 		for _, arg := range v.Names {
@@ -125,9 +119,9 @@ func (g *Generator) parseFunc(f *ast.FuncDecl) {
 		}
 	}
 
+	appendReturnTypes(&m, f.Type)
 	if f.Type.Results.NumFields() == 1 {
 		typ := resolveType(f.Type.Results.List[0].Type)
-		appendReturnTypes(&m, f.Type)
 		if isExported(typ) {
 			m.returnClass = typ
 		}
