@@ -123,8 +123,10 @@ func (g *Generator) parseBlockArg(m *method, f *ast.FuncType) {
 		}
 	}
 
-	for _, rf := range f.Results.List {
-		m.blockReturnTypes = append(m.blockReturnTypes, resolveType(rf.Type))
+	if f.Results != nil {
+		for _, rf := range f.Results.List {
+			m.blockReturnTypes = append(m.blockReturnTypes, resolveType(rf.Type))
+		}
 	}
 }
 
@@ -144,7 +146,9 @@ func (g *Generator) parseFunc(f *ast.FuncDecl) {
 		}
 	}
 
-	appendReturnTypes(&m, f.Type)
+	if f.Type.Results != nil {
+		appendReturnTypes(&m, f.Type)
+	}
 	if f.Type.Results.NumFields() == 1 {
 		typ := resolveType(f.Type.Results.List[0].Type)
 		if isExported(typ) {

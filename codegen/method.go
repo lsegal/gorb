@@ -105,6 +105,9 @@ func (m *method) BlockReturnTypeToGo() string {
 }
 
 func (m *method) ResolvedReturnType() string {
+	if len(m.returnTypes) == 0 {
+		return "nil"
+	}
 	return m.g.resolvedType(m.returnTypes[0])
 }
 
@@ -189,13 +192,16 @@ func (m *method) ReceiverVars() string {
 }
 
 func (m *method) RaiseError() string {
-	if m.ReceiverVars() != "ret" {
+	if len(m.returnTypes) > 0 && m.ReceiverVars() != "ret" {
 		return "\n  gorb.RaiseError(err)"
 	}
 	return ""
 }
 
 func (m *method) ReturnTypeToRuby() string {
+	if len(m.returnTypes) == 0 {
+		return "C.Qnil"
+	}
 	ret := "ret"
 	if r := m.ResolvedReturnClass(); r != "" && isExported(r) {
 		var v string

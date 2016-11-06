@@ -3,7 +3,7 @@ package main
 
 /*
 #include "ruby.h"
-extern VALUE g_cmethod__Double(VALUE, VALUE);
+extern VALUE g_cmethod__DoWith(VALUE, VALUE);
 
 */
 import "C"
@@ -15,14 +15,14 @@ var _ unsafe.Pointer // ignore unused import warning
 
 
 
-//export g_cmethod__Double
-func g_cmethod__Double(self, val uintptr) uintptr {
+//export g_cmethod__DoWith
+func g_cmethod__DoWith(self, val uintptr) uintptr {
 	go_val := int(gorb.GoInt(val))
-	ret := blocks.Double(go_val, block__g_cmethod__Double)
+	ret := blocks.DoWith(go_val, block__g_cmethod__DoWith)
 	return gorb.IntValue(int(ret))
 }
 
-func block__g_cmethod__Double(arg0 int) (int) {
+func block__g_cmethod__DoWith(arg0 int) (int) {
 	rb_arg0 := gorb.IntValue(int(arg0))
 	ret := gorb.Yield(rb_arg0)
 	return int(gorb.GoInt(ret))
@@ -35,7 +35,7 @@ func Init_blocks() {
 	g_pkg := gorb.DefineModule(gorb.ModuleRoot, "Test")
 	g_pkg = gorb.DefineModule(g_pkg, "Blocks")
 
-	gorb.DefineModuleFunction(g_pkg, "double", C.g_cmethod__Double, 1)
+	gorb.DefineModuleFunction(g_pkg, "do_with", C.g_cmethod__DoWith, 1)
 
 }
 

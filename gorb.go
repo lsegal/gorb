@@ -17,6 +17,10 @@ void* rbmacro_Data_Get_Struct(VALUE obj) {
 	void *ret; Data_Get_Struct(obj, void, ret); return ret;
 }
 
+inline void rbmacro_ary_write(VALUE obj, int idx, VALUE val) {
+	RARRAY_ASET(obj, idx, val);
+}
+
 // extra GC helpers
 extern void gorb_free(void*);
 */
@@ -24,6 +28,13 @@ import "C"
 import "unsafe"
 
 var gcmap = map[interface{}]bool{}
+var idProcCall C.ID
+
+func init() {
+	call := C.CString("call")
+	defer C.free(unsafe.Pointer(call))
+	idProcCall = C.rb_intern(call)
+}
 
 const ModuleRoot = uintptr(0)
 
@@ -92,15 +103,22 @@ func ObjAtPath(path string) uintptr {
 func Yield(values ...uintptr) uintptr {
 	if len(values) == 0 {
 		return uintptr(C.rb_yield(C.Qundef))
-	} else if len(values) == 1 {
-		return uintptr(C.rb_yield(C.VALUE(values[0])))
+	}
+	return uintptr(C.rb_yield_values2(C.int(len(values)),
+		*(**C.VALUE)(unsafe.Pointer(&values))))
+}
+
+func BlockProc() uintptr {
+	return uintptr(C.rb_block_proc())
+}
+
+func ProcCall(proc uintptr, values ...uintptr) uintptr {
+	if len(values) == 0 {
+		return uintptr(C.rb_yield(C.Qundef))
 	}
 
-	arr := C.rb_ary_new()
-	for _, v := range values {
-		C.rb_ary_push(arr, C.VALUE(v))
-	}
-	return uintptr(C.rb_yield_splat(C.VALUE(arr)))
+	return uintptr(C.rb_funcallv(C.VALUE(proc), idProcCall,
+		C.int(len(values)), *(**C.VALUE)(unsafe.Pointer(&values))))
 }
 
 func RaiseError(err error) {
