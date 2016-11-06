@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -110,12 +111,36 @@ func (g *Generator) parseField(field *ast.Field, class *class) {
 
 }
 
+func (g *Generator) parseBlockArg(m *method, f *ast.FuncType) {
+	for i, v := range f.Params.List {
+		names := append([]*ast.Ident{}, v.Names...)
+		if len(names) == 0 {
+			names = []*ast.Ident{ast.NewIdent("arg" + strconv.Itoa(i))}
+		}
+		for _, arg := range names {
+			m.blockArgs = append(m.blockArgs, arg.Name)
+			m.blockArgTypes = append(m.blockArgTypes, resolveType(v.Type))
+		}
+	}
+
+	for _, rf := range f.Results.List {
+		m.blockReturnTypes = append(m.blockReturnTypes, resolveType(rf.Type))
+	}
+}
+
 func (g *Generator) parseFunc(f *ast.FuncDecl) {
 	m := method{g: g, name: f.Name.Name}
-	for _, v := range f.Type.Params.List {
-		for _, arg := range v.Names {
-			m.args = append(m.args, arg.Name)
-			m.argTypes = append(m.argTypes, resolveType(v.Type))
+	for i, v := range f.Type.Params.List {
+		switch t := v.Type.(type) {
+		case *ast.FuncType:
+			if i == len(f.Type.Params.List)-1 {
+				g.parseBlockArg(&m, t)
+			}
+		default:
+			for _, arg := range v.Names {
+				m.args = append(m.args, arg.Name)
+				m.argTypes = append(m.argTypes, resolveType(v.Type))
+			}
 		}
 	}
 

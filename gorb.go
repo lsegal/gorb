@@ -89,6 +89,20 @@ func ObjAtPath(path string) uintptr {
 	return uintptr(C.rb_path2class(cpath))
 }
 
+func Yield(values ...uintptr) uintptr {
+	if len(values) == 0 {
+		return uintptr(C.rb_yield(C.Qundef))
+	} else if len(values) == 1 {
+		return uintptr(C.rb_yield(C.VALUE(values[0])))
+	}
+
+	arr := C.rb_ary_new()
+	for _, v := range values {
+		C.rb_ary_push(arr, C.VALUE(v))
+	}
+	return uintptr(C.rb_yield_splat(C.VALUE(arr)))
+}
+
 func RaiseError(err error) {
 	if err == nil {
 		return

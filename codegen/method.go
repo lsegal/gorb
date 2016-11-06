@@ -24,6 +24,84 @@ type method struct {
 	args        []string
 	argTypes    []string
 	returnTypes []string
+
+	blockArgs        []string
+	blockArgTypes    []string
+	blockReturnTypes []string
+}
+
+func (m *method) HasBlock() bool {
+	return len(m.blockArgs) > 0
+}
+
+func (m *method) HasBlockReturnType() bool {
+	return len(m.blockReturnTypes) > 0
+}
+
+func (m *method) BlockSig() string {
+	args := []string{}
+	for i, n := range m.blockArgs {
+		args = append(args, n+" "+m.blockArgTypes[i])
+	}
+
+	return fmt.Sprintf("block__%s(%s) (%s)", m.FuncName(),
+		strings.Join(args, ", "), strings.Join(m.blockReturnTypes, ", "))
+}
+
+func (m *method) RbBlockArgs() string {
+	outargs := make([]string, len(m.blockArgs))
+	for i, a := range m.blockArgs {
+		prefix := ""
+		if m.g.isValueType(m.blockArgTypes[i]) {
+			prefix = "*"
+		}
+		outargs[i] = prefix + "rb_" + a
+	}
+	return strings.Join(outargs, ", ")
+}
+
+func (m *method) BlockArgsList() []string {
+	return m.blockArgs
+}
+
+func (m *method) BlockArgToRb(n int) string {
+	ret := m.blockArgs[n]
+	if r := m.g.resolvedType(m.blockArgTypes[n]); r != "" && isExported(r) {
+		var v string
+		if class := m.g.findClass(r); class != nil {
+			v = class.VarName()
+		} else {
+			v = "rb_cObject"
+		}
+		if m.indirection == 0 {
+			ret = "&" + ret
+		}
+		return fmt.Sprintf("gorb.StructValue(%s, unsafe.Pointer(%s))", v, ret)
+	}
+
+	if r := m.g.resolvedType(m.blockArgTypes[n]); isExternal(r) {
+		if m.indirection == 0 {
+			ret = "&" + ret
+		}
+
+		m.g.pkg.usedImports[m.g.pkg.imports[packageName(r)]] = true
+		return fmt.Sprintf("gorb.StructValue(gorb.ObjAtPath(\"%s\"), unsafe.Pointer(%s))",
+			m.g.importToModule(r), ret)
+	}
+
+	t, _ := m.g.returnTypes(m.blockArgTypes[n])
+	return fmt.Sprintf("gorb.%s(%s))", t[0], ret)
+}
+
+func (m *method) BlockReceiverVars() string {
+	if m.blockReturnTypes[len(m.blockReturnTypes)-1] == "error" {
+		return "ret, err"
+	}
+	return "ret"
+}
+
+func (m *method) BlockReturnTypeToGo() string {
+	return m.typeToGo(m.blockReturnTypes[0], "ret")
 }
 
 func (m *method) ResolvedReturnType() string {
@@ -88,6 +166,9 @@ func (m *method) GoArgs() string {
 			prefix = "*"
 		}
 		outargs[i] = prefix + "go_" + a
+	}
+	if m.HasBlock() {
+		outargs = append(outargs, "block__"+m.FuncName())
 	}
 	return strings.Join(outargs, ", ")
 }
@@ -197,10 +278,24 @@ func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
 	{{.ReceiverVars}} := {{.FnReceiver}}.{{.Name}}({{.GoArgs}}){{.RaiseError}}
 	return {{.ReturnTypeToRuby}}
 {{- else}}
-	{{.FnReceiver}}.{{.Name}}({{.GoArgs}})
+	{{.FnReceiver}}.{{.Name}}({{.GoArgs}}){{.RaiseError}}
 	return C.Qnil
 {{- end}}
 }
+{{- if .HasBlock}}
+
+func {{.BlockSig}} {
+{{- range $i, $v := .BlockArgsList}}
+	rb_{{$v}} := {{$.BlockArgToRb $i}}
+{{- end}}
+{{- if .HasBlockReturnType}}
+	ret := gorb.Yield({{.RbBlockArgs}})
+	return {{.BlockReturnTypeToGo}}
+{{- else}}
+	gorb.Yield({{.RbBlockArgs}})
+{{- end}}
+}
+{{- end}}
 
 `
 
