@@ -53,6 +53,7 @@ Tests pass if exit code is 0.
 ## TODO
 
 - [ ] Support for slices, maps, complex pointer types.
+- [x] Support for basic slice types (string, bool, int, float64).
 - [x] Support for pass-by-value structs (partial value type support).
 - [x] Support for external packages (partial support for local packages).
 - [x] Support for error returns (as exceptions?).

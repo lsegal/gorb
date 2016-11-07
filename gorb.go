@@ -17,8 +17,16 @@ void* rbmacro_Data_Get_Struct(VALUE obj) {
 	void *ret; Data_Get_Struct(obj, void, ret); return ret;
 }
 
-inline void rbmacro_ary_write(VALUE obj, int idx, VALUE val) {
+inline void rbmacro_ary_set(VALUE obj, int idx, VALUE val) {
 	RARRAY_ASET(obj, idx, val);
+}
+
+inline VALUE rbmacro_ary_get(VALUE obj, int idx) {
+	return RARRAY_AREF(obj, idx);
+}
+
+inline long rbmacro_ary_len(VALUE obj) {
+	return RARRAY_LEN(obj);
 }
 
 // extra GC helpers
@@ -37,6 +45,86 @@ func init() {
 }
 
 const ModuleRoot = uintptr(0)
+
+func GoStringArray(arr uintptr) []string {
+	list := make([]string, int(C.rbmacro_ary_len(C.VALUE(arr))))
+	for i := 0; i < int(C.rbmacro_ary_len(C.VALUE(arr))); i++ {
+		list[i] = GoString(uintptr(C.rbmacro_ary_get(C.VALUE(arr), C.int(i))))
+	}
+	return list
+}
+
+func ArrayStringValue(arr []string) uintptr {
+	list := C.rb_ary_new2(C.long(len(arr)))
+	for _, v := range arr {
+		C.rb_ary_push(list, C.VALUE(StringValue(v)))
+	}
+	return uintptr(list)
+}
+
+func GoIntArray(arr uintptr) []int {
+	list := make([]int, int(C.rbmacro_ary_len(C.VALUE(arr))))
+	for i := 0; i < int(C.rbmacro_ary_len(C.VALUE(arr))); i++ {
+		list[i] = GoInt(uintptr(C.rbmacro_ary_get(C.VALUE(arr), C.int(i))))
+	}
+	return list
+}
+
+func ArrayIntValue(arr []int) uintptr {
+	list := C.rb_ary_new2(C.long(len(arr)))
+	for _, v := range arr {
+		C.rb_ary_push(list, C.VALUE(IntValue(v)))
+	}
+	return uintptr(list)
+}
+
+func GoBoolArray(arr uintptr) []bool {
+	list := make([]bool, int(C.rbmacro_ary_len(C.VALUE(arr))))
+	for i := 0; i < int(C.rbmacro_ary_len(C.VALUE(arr))); i++ {
+		list[i] = GoBool(uintptr(C.rbmacro_ary_get(C.VALUE(arr), C.int(i))))
+	}
+	return list
+}
+
+func ArrayBoolValue(arr []bool) uintptr {
+	list := C.rb_ary_new2(C.long(len(arr)))
+	for _, v := range arr {
+		C.rb_ary_push(list, C.VALUE(BoolValue(v)))
+	}
+	return uintptr(list)
+}
+
+func GoFloatArray(arr uintptr) []float64 {
+	list := make([]float64, int(C.rbmacro_ary_len(C.VALUE(arr))))
+	for i := 0; i < int(C.rbmacro_ary_len(C.VALUE(arr))); i++ {
+		list[i] = GoFloat(uintptr(C.rbmacro_ary_get(C.VALUE(arr), C.int(i))))
+	}
+	return list
+}
+
+func ArrayFloatValue(arr []float64) uintptr {
+	list := C.rb_ary_new2(C.long(len(arr)))
+	for _, v := range arr {
+		C.rb_ary_push(list, C.VALUE(FloatValue(v)))
+	}
+	return uintptr(list)
+}
+
+func GoStructArray(arr uintptr) []unsafe.Pointer {
+	list := make([]unsafe.Pointer, int(C.rbmacro_ary_len(C.VALUE(arr))))
+	for i := 0; i < int(C.rbmacro_ary_len(C.VALUE(arr))); i++ {
+		list[i] = GoStruct(uintptr(C.rbmacro_ary_get(C.VALUE(arr), C.int(i))))
+	}
+	return list
+}
+
+func ArrayStructValue(typ uintptr, arr []unsafe.Pointer) uintptr {
+	list := C.rb_ary_new2(C.long(len(arr)))
+	for _, v := range arr {
+		C.rb_ary_push(list, C.VALUE(StructValue(typ, v)))
+	}
+	return uintptr(list)
+}
 
 func GoInt(n uintptr) int {
 	return int(C.rbmacro_NUM2INT(C.VALUE(n)))
