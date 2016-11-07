@@ -11,7 +11,7 @@ import (
 )
 
 func (g *Generator) parse() {
-	pkgs, err := parser.ParseDir(&g.fset, g.Path, nil, 0)
+	pkgs, err := parser.ParseDir(&g.fset, g.Path, nil, parser.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -29,9 +29,21 @@ func (g *Generator) parse() {
 		g.pkg.usedImports = map[string]bool{}
 		g.pkg.usedImports[g.pkg.importPackage()] = true
 
-		for _, file := range pkg.Files {
-			if strings.HasSuffix(file.Name.String(), "_test") {
+		for path, file := range pkg.Files {
+			if strings.HasSuffix(path, "_test.go") {
 				continue
+			}
+
+			for _, comment := range file.Comments {
+				for _, line := range comment.List {
+					fields := strings.Fields(line.Text)
+					switch fields[0] {
+					case "//ruby:nomain":
+						g.pkg.noMain = true
+					case "//ruby:module":
+						g.pkg.modNames = strings.Split(fields[1], "::")
+					}
+				}
 			}
 
 			for _, i := range file.Imports {
@@ -92,6 +104,19 @@ func (g *Generator) parseType(d *ast.GenDecl) {
 
 func (g *Generator) parseField(field *ast.Field, class *class) {
 	for _, name := range field.Names {
+		if field.Doc != nil {
+			ignore := false
+			for _, line := range field.Doc.List {
+				if line.Text == "//ruby:ignore" {
+					ignore = true
+					break
+				}
+			}
+			if ignore {
+				continue
+			}
+		}
+
 		if name.IsExported() {
 			typ := resolveType(field.Type)
 			m := &method{
@@ -132,6 +157,15 @@ func (g *Generator) parseBlockArg(m *method, f *ast.FuncType) {
 
 func (g *Generator) parseFunc(f *ast.FuncDecl) {
 	m := method{g: g, name: f.Name.Name}
+	if f.Doc != nil {
+		for _, line := range f.Doc.List {
+			fields := strings.Fields(line.Text)
+			if fields[0] == "//ruby" {
+				m.exportName = fields[1]
+			}
+		}
+	}
+
 	for i, v := range f.Type.Params.List {
 		switch t := v.Type.(type) {
 		case *ast.FuncType:

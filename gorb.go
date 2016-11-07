@@ -1,47 +1,24 @@
 package gorb
 
-/*
-#include <stdlib.h>
-#include "ruby.h"
-
-// Ruby macro wrappers
-int rbmacro_NUM2INT(VALUE fix) { return NUM2INT(fix); }
-VALUE rbmacro_INT2NUM(int n) { return INT2NUM(n); }
-double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
-char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
-
-VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, char *ptr) {
-	return Data_Wrap_Struct(klass, mark, free, (void*)ptr);
-}
-void* rbmacro_Data_Get_Struct(VALUE obj) {
-	void *ret; Data_Get_Struct(obj, void, ret); return ret;
-}
-
-inline void rbmacro_ary_set(VALUE obj, int idx, VALUE val) {
-	RARRAY_ASET(obj, idx, val);
-}
-
-inline VALUE rbmacro_ary_get(VALUE obj, int idx) {
-	return RARRAY_AREF(obj, idx);
-}
-
-inline long rbmacro_ary_len(VALUE obj) {
-	return RARRAY_LEN(obj);
-}
-
-// extra GC helpers
-extern void gorb_free(void*);
-*/
+// #include "gorb.h"
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+
+	"github.com/lsegal/gorb/native"
+)
 
 var gcmap = map[interface{}]bool{}
 var idProcCall C.ID
+var idEnumFor C.ID
 
 func init() {
 	call := C.CString("call")
 	defer C.free(unsafe.Pointer(call))
+	enumFor := C.CString("enum_for")
+	defer C.free(unsafe.Pointer(enumFor))
 	idProcCall = C.rb_intern(call)
+	idEnumFor = C.rb_intern(enumFor)
 }
 
 const ModuleRoot = uintptr(0)
@@ -54,12 +31,9 @@ func GoStringArray(arr uintptr) []string {
 	return list
 }
 
-func ArrayStringValue(arr []string) uintptr {
-	list := C.rb_ary_new2(C.long(len(arr)))
-	for _, v := range arr {
-		C.rb_ary_push(list, C.VALUE(StringValue(v)))
-	}
-	return uintptr(list)
+func ArrayStringValue(arr *[]string) uintptr {
+	return g_classinit_NativeStringArray(g_class_NativeStringArray,
+		&native.NativeStringArray{List: arr})
 }
 
 func GoIntArray(arr uintptr) []int {
@@ -70,12 +44,9 @@ func GoIntArray(arr uintptr) []int {
 	return list
 }
 
-func ArrayIntValue(arr []int) uintptr {
-	list := C.rb_ary_new2(C.long(len(arr)))
-	for _, v := range arr {
-		C.rb_ary_push(list, C.VALUE(IntValue(v)))
-	}
-	return uintptr(list)
+func ArrayIntValue(arr *[]int) uintptr {
+	return g_classinit_NativeIntArray(g_class_NativeIntArray,
+		&native.NativeIntArray{List: arr})
 }
 
 func GoBoolArray(arr uintptr) []bool {
@@ -86,12 +57,9 @@ func GoBoolArray(arr uintptr) []bool {
 	return list
 }
 
-func ArrayBoolValue(arr []bool) uintptr {
-	list := C.rb_ary_new2(C.long(len(arr)))
-	for _, v := range arr {
-		C.rb_ary_push(list, C.VALUE(BoolValue(v)))
-	}
-	return uintptr(list)
+func ArrayBoolValue(arr *[]bool) uintptr {
+	return g_classinit_NativeBoolArray(g_class_NativeBoolArray,
+		&native.NativeBoolArray{List: arr})
 }
 
 func GoFloatArray(arr uintptr) []float64 {
@@ -102,12 +70,9 @@ func GoFloatArray(arr uintptr) []float64 {
 	return list
 }
 
-func ArrayFloatValue(arr []float64) uintptr {
-	list := C.rb_ary_new2(C.long(len(arr)))
-	for _, v := range arr {
-		C.rb_ary_push(list, C.VALUE(FloatValue(v)))
-	}
-	return uintptr(list)
+func ArrayFloatValue(arr *[]float64) uintptr {
+	return g_classinit_NativeFloatArray(g_class_NativeFloatArray,
+		&native.NativeFloatArray{List: arr})
 }
 
 func GoStructArray(arr uintptr) []unsafe.Pointer {
@@ -196,6 +161,14 @@ func Yield(values ...uintptr) uintptr {
 		*(**C.VALUE)(unsafe.Pointer(&values))))
 }
 
+func EnumFor(self uintptr, values ...uintptr) uintptr {
+	if C.rb_block_given_p() != C.int(0) {
+		return uintptr(C.Qnil)
+	}
+	return uintptr(C.rb_funcallv(C.VALUE(self), idEnumFor,
+		C.int(len(values)), *(**C.VALUE)(unsafe.Pointer(&values))))
+}
+
 func BlockProc() uintptr {
 	return uintptr(C.rb_block_proc())
 }
@@ -257,6 +230,16 @@ func DefineClass(parent uintptr, name string) uintptr {
 	}
 	return uintptr(C.rb_define_class_under(C.VALUE(parent),
 		cname, C.rb_cObject))
+}
+
+func DefineClassInheriting(parent uintptr, name string, super uintptr) uintptr {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	if parent == 0 {
+		return uintptr(C.rb_define_class(cname, C.rb_cObject))
+	}
+	return uintptr(C.rb_define_class_under(C.VALUE(parent),
+		cname, C.VALUE(super)))
 }
 
 func DefineModule(parent uintptr, name string) uintptr {

@@ -12,9 +12,11 @@ import (
 )
 
 type Generator struct {
-	Path  string
-	Root  string
-	Build bool
+	Path     string
+	RootPath string
+	OutFile  string
+	Root     string
+	Build    bool
 
 	code            string
 	init            bytes.Buffer
@@ -55,10 +57,18 @@ func (g *Generator) build() {
 }
 
 func (g *Generator) writePath() {
-	g.outpath = filepath.Join("ext", g.Path)
+	g.outpath = filepath.Join(g.RootPath, g.Path)
 	fname := g.pkg.name + ".go"
-	os.MkdirAll(g.outpath, 0775)
-	ioutil.WriteFile(filepath.Join(g.outpath, fname), []byte(g.code), 0644)
+	outfile := filepath.Join(g.outpath, fname)
+	if g.OutFile != "" {
+		outfile = g.OutFile
+	} else {
+		os.MkdirAll(g.outpath, 0775)
+	}
+	ioutil.WriteFile(outfile, []byte(g.code), 0644)
+	if g.pkg.noMain {
+		return
+	}
 	ioutil.WriteFile(filepath.Join(g.outpath, "Makefile"), []byte(`
 CGO_CFLAGS = -I $(shell ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]') -I $(shell ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyarchhdrdir"]')
 CGO_LDFLAGS = -L $(shell ruby -rrbconfig -e 'puts RbConfig::CONFIG["libdir"]') -l$(shell ruby -rrbconfig -e 'puts RbConfig::CONFIG["RUBY_SO_NAME"]')
@@ -77,7 +87,13 @@ func (g *Generator) rootModule() string {
 	if g.Root != "" {
 		modNames = strings.Split(g.Root, "::")
 	}
-	pathNames := strings.Split(strings.Replace(g.Path, ".", "", -1), "/")
+
+	var pathNames []string
+	if len(g.pkg.modNames) > 0 {
+		pathNames = g.pkg.modNames
+	} else {
+		pathNames = strings.Split(strings.Replace(g.Path, ".", "", -1), "/")
+	}
 	modNames = append(modNames, pathNames...)
 
 	varname := "gorb.ModuleRoot"
@@ -104,8 +120,17 @@ func (g *Generator) write() {
 		class.write(g)
 	}
 
-	g.code = fmt.Sprintf(`
-package main
+	mainCode := ""
+	pkgName := g.pkg.name
+	initCode := "func init() {"
+	if !g.pkg.noMain {
+		pkgName = "main"
+		mainCode = "func main() { }"
+		initCode = fmt.Sprintf("//export Init_%s\nfunc Init_%s() {",
+			g.pkg.name, g.pkg.name)
+	}
+
+	g.code = fmt.Sprintf(`package %s
 
 /*
 #include "ruby.h"
@@ -121,15 +146,14 @@ var _ unsafe.Pointer // ignore unused import warning
 %s
 %s
 
-//export Init_%s
-func Init_%s() {
+%s
 %s
 %s
 }
 
-func main() {}
+%s
 `,
-		g.preamble.String(), g.pkg.allImports(), g.gopreamble.String(),
-		g.methods.String(), g.pkg.name, g.pkg.name, g.rootModule(), g.init.String())
+		pkgName, g.preamble.String(), g.pkg.allImports(), g.gopreamble.String(),
+		g.methods.String(), initCode, g.rootModule(), g.init.String(), mainCode)
 
 }

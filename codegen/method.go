@@ -20,6 +20,7 @@ type method struct {
 	returnClass string
 	ctor        bool
 	name        string
+	exportName  string
 	scope       scope
 	args        []string
 	argTypes    []string
@@ -136,6 +137,13 @@ func (m *method) RubyName() string {
 		name += "?"
 	}
 	return name
+}
+
+func (m *method) ExportRubyName() string {
+	if m.exportName != "" {
+		return m.exportName
+	}
+	return m.RubyName()
 }
 
 func (m *method) FuncName() string {
@@ -271,9 +279,21 @@ func (m *method) FnReceiver() string {
 	return "go_obj"
 }
 
+func (m *method) RubyEnumArgs() string {
+	return strings.Join(append([]string{"self",
+		"gorb.StringValue(" + fmt.Sprintf("%q", m.RubyName()) + ")"},
+		m.args...), ", ")
+}
+
 const tplMethodData = `
 //export {{.FuncName}}
 func {{.FuncName}}({{.RubyArgs}} uintptr) uintptr {
+{{- if .HasBlock}}
+	if e := gorb.EnumFor({{.RubyEnumArgs}}); e != C.Qnil {
+		return e
+	}
+
+{{- end}}
 {{- if ne .Scope "Class"}}
 	{{.FnReceiver}} := g_val2ptr_{{.ClassName}}(self)
 {{- end}}
@@ -315,7 +335,7 @@ func (m *method) write(g *Generator) {
 			m.RubyName(), m.FuncName(), len(m.args))
 	} else {
 		fmt.Fprintf(&g.init, `	gorb.Define%sMethod(%s, "%s", C.%s, %d)`+"\n",
-			m.Scope(), m.class.VarName(), m.RubyName(), m.FuncName(), len(m.args))
+			m.Scope(), m.class.VarName(), m.ExportRubyName(), m.FuncName(), len(m.args))
 	}
 	if err := tplMethod.Execute(&g.methods, m); err != nil {
 		panic(err)

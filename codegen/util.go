@@ -54,19 +54,25 @@ func (g *Generator) returnTypes(t string) ([]string, error) {
 	case "bool":
 		return []string{"BoolValue(bool", "GoBool"}, nil
 	case "[]bool":
-		return []string{"ArrayBoolValue([]bool", "GoBoolArray"}, nil
+		return []string{"ArrayBoolValue(", "GoBoolArray"}, nil
 	case "int":
 		return []string{"IntValue(int", "GoInt"}, nil
 	case "[]int":
-		return []string{"ArrayIntValue(p[int", "GoIntArray"}, nil
+		return []string{"ArrayIntValue(&", "GoIntArray"}, nil
+	case "*[]int":
+		return []string{"ArrayIntValue(", "GoIntArray"}, nil
 	case "string":
 		return []string{"StringValue(string", "GoString"}, nil
 	case "[]string":
-		return []string{"ArrayStringValue([]string", "GoStringArray"}, nil
+		return []string{"ArrayStringValue(&", "GoStringArray"}, nil
+	case "*[]string":
+		return []string{"ArrayStringValue(", "GoStringArray"}, nil
 	case "float64":
 		return []string{"FloatValue(float64", "GoFloat"}, nil
 	case "[]float64":
-		return []string{"ArrayFloatValue([]float64", "GoFloatArray"}, nil
+		return []string{"ArrayFloatValue(&", "GoFloatArray"}, nil
+	case "*[]float64":
+		return []string{"ArrayFloatValue(", "GoFloatArray"}, nil
 	}
 
 	if class := g.findClass(t); class != nil {

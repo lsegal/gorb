@@ -15,6 +15,8 @@ type gpackage struct {
 	classes     []*class
 	funcs       []*method
 	ast         *ast.Package
+	noMain      bool
+	modNames    []string
 }
 
 func (g *gpackage) importPackage() string {

@@ -19,6 +19,8 @@ func main() {
 
 	boolPtr := flag.Bool("build", false, "builds the extension after generating")
 	rootPtr := flag.String("root", "", "root Ruby module to place code under")
+	rootPathPtr := flag.String("root-path", "ext", "root directory on disk to place code")
+	outFilePtr := flag.String("file", "", "override the filename to write to")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -26,8 +28,13 @@ func main() {
 	}
 
 	for i := 0; i < flag.NArg(); i++ {
-		p := path.Clean(flag.Arg(i))
-		gen := codegen.Generator{Path: p, Root: *rootPtr, Build: *boolPtr}
+		gen := codegen.Generator{
+			Path:     path.Clean(flag.Arg(i)),
+			Root:     *rootPtr,
+			RootPath: *rootPathPtr,
+			OutFile:  *outFilePtr,
+			Build:    *boolPtr,
+		}
 		gen.Generate()
 	}
 }
