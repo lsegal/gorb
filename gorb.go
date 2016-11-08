@@ -1,6 +1,33 @@
 package gorb
 
-// #include "gorb.h"
+/*
+#include <stdlib.h>
+#include "ruby.h"
+
+// Ruby macro wrappers
+static inline int rbmacro_NUM2INT(VALUE fix) { return NUM2INT(fix); }
+static inline VALUE rbmacro_INT2NUM(int n) { return INT2NUM(n); }
+static inline double rbmacro_NUM2DBL(VALUE n) { return NUM2DBL(n); }
+static inline char* rbmacro_StringValueCStr(VALUE s) { return StringValueCStr(s); }
+static inline VALUE rbmacro_Data_Wrap_Struct(VALUE klass, void* mark, void* free, char *ptr) {
+	return Data_Wrap_Struct(klass, mark, free, (void*)ptr);
+}
+static inline void* rbmacro_Data_Get_Struct(VALUE obj) {
+	void *ret; Data_Get_Struct(obj, void, ret); return ret;
+}
+static inline void rbmacro_ary_set(VALUE obj, int idx, VALUE val) {
+	RARRAY_ASET(obj, idx, val);
+}
+static inline VALUE rbmacro_ary_get(VALUE obj, int idx) {
+	return RARRAY_AREF(obj, idx);
+}
+static inline long rbmacro_ary_len(VALUE obj) {
+	return RARRAY_LEN(obj);
+}
+
+// extra GC helpers
+extern void gorb_free(void*);
+*/
 import "C"
 import (
 	"unsafe"
