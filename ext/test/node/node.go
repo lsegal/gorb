@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -98,4 +97,4 @@ func Init_node() {
 
 }
 
-func main() {}
+func main() { }

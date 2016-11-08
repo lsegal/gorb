@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -62,4 +61,4 @@ func Init_fib() {
 
 }
 
-func main() {}
+func main() { }

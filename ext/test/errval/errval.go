@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -34,4 +33,4 @@ func Init_errval() {
 
 }
 
-func main() {}
+func main() { }

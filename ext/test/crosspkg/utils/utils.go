@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -35,4 +34,4 @@ func Init_utils() {
 
 }
 
-func main() {}
+func main() { }

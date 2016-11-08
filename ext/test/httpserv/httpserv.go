@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -17,6 +16,9 @@ var _ unsafe.Pointer // ignore unused import warning
 
 //export g_cmethod__Serve
 func g_cmethod__Serve(self, addr uintptr) uintptr {
+	if e := gorb.EnumFor(self, gorb.StringValue("serve"), addr); e != C.Qnil {
+		return e
+	}
 	go_addr := string(gorb.GoString(addr))
 	httpserv.Serve(go_addr, block__g_cmethod__Serve)
 	return C.Qnil
@@ -39,4 +41,4 @@ func Init_httpserv() {
 
 }
 
-func main() {}
+func main() { }

@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -242,4 +241,4 @@ func Init_data() {
 
 }
 
-func main() {}
+func main() { }

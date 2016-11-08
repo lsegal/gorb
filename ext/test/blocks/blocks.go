@@ -1,4 +1,3 @@
-
 package main
 
 /*
@@ -17,6 +16,9 @@ var _ unsafe.Pointer // ignore unused import warning
 
 //export g_cmethod__DoWith
 func g_cmethod__DoWith(self, val uintptr) uintptr {
+	if e := gorb.EnumFor(self, gorb.StringValue("do_with"), val); e != C.Qnil {
+		return e
+	}
 	go_val := int(gorb.GoInt(val))
 	ret := blocks.DoWith(go_val, block__g_cmethod__DoWith)
 	return gorb.IntValue(int(ret))
@@ -39,4 +41,4 @@ func Init_blocks() {
 
 }
 
-func main() {}
+func main() { }
